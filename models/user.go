@@ -1,13 +1,15 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/shohan-pherones/event-horizon-pro/db"
 	"github.com/shohan-pherones/event-horizon-pro/utils"
 )
 
 type User struct {
 	ID       int64
-	Name     string `binding:"required"`
+	Name     string
 	Email    string `binding:"required"`
 	Password string `binding:"required"`
 }
@@ -37,4 +39,24 @@ func (u User) Save() error {
 	userId, err := result.LastInsertId()
 	u.ID = userId
 	return err
+}
+
+func (u User) ValidateCredentials() error {
+	query := "SELECT password FROM users WHERE email = ?"
+	row := db.DB.QueryRow(query, u.Email)
+
+	var retrievedPassword string
+	err := row.Scan(&retrievedPassword)
+
+	if err != nil {
+		return errors.New("credentials invalid")
+	}
+
+	isPasswordValid := utils.ComparingPasswordHash(u.Password, retrievedPassword)
+
+	if !isPasswordValid {
+		return errors.New("credentials invalid")
+	}
+
+	return nil
 }

@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,13 +12,9 @@ func signup(context *gin.Context) {
 	err := context.ShouldBindJSON(&user)
 
 	if err != nil {
-		fmt.Println("Error binding JSON:", err)
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data."})
 		return
 	}
-
-	// Print user data for debugging
-	fmt.Println("Received user data:", user)
 
 	err = user.Save()
 
@@ -29,4 +24,24 @@ func signup(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusCreated, gin.H{"message": "User created successfully."})
+}
+
+func login(context *gin.Context) {
+	var user models.User
+
+	err := context.ShouldBindJSON(&user)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data."})
+		return
+	}
+
+	err = user.ValidateCredentials()
+
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Could not authenticate user."})
+		return
+	}
+
+	context.JSON(http.StatusCreated, gin.H{"message": "Login successfully."})
 }
