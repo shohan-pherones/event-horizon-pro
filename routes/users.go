@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/shohan-pherones/event-horizon-pro/models"
+	"github.com/shohan-pherones/event-horizon-pro/utils"
 )
 
 func signup(context *gin.Context) {
@@ -43,5 +44,12 @@ func login(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusCreated, gin.H{"message": "Login successfully."})
+	token, err := utils.GenerateToken(user.Email, user.ID)
+
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not authenticate user."})
+		return
+	}
+
+	context.JSON(http.StatusCreated, gin.H{"message": "Login successfully.", "token": token})
 }
